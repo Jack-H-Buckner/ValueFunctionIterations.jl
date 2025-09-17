@@ -4,6 +4,6 @@ ValueFunctionIterations.jl provides a framework for solving stochastic dynamic p
 
 ValueFunctionIterations.jl approximate the value function for the dynamic program using the Bsplines from Interpolations.jl and solve the bellman equaitons using value funciton iteration. Random varibles can be included in the model using the AbstractRandomVariable interace provided by ValueFunctionIterations.jl. This interface allows the expectation in the bellman euqaiton to be evaluated using either Montecarlo methods, quadrature, or a mixture of the two. 
 
-The solution to the dynamic program is stored in a DynamicProgram object. Thsi stores the data used to define the problem along with the value and policy functions. The  
+The solution to the dynamic program is stored in a DynamicProgram object. This stores the data used to define the problem along with the value and policy functions. The  
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue)](github.com/jack-h-buckner.github.io/ValueFunctionIterations.jl)
+[![Docs](https://img.shields.io/badge/docs-dev-blue)](github.com/jack-h-buckner.github.io/ValueFunctionIterations.jl/dev/)
