@@ -1,5 +1,3 @@
-using Roots, Distributions, Random
-include("../src/ValueFunctionIterations.jl")
 
 function BMSY(p)
     target = x -> -((p.r*x-p.k)*exp(p.r*(1-x/p.k))+p.k)/p.k
@@ -44,6 +42,9 @@ function main()
     sol_MC = ValueFunctionIterations.DynamicProgram(R, F, p, u,  X, δ, grid; tolerance = 1e-5, maxiter = 400)
     test_MC = sum((theoretical.(grid,BMSY_) .- broadcast(s -> s - s*sol_MC.P(s)[1],grid)).^2) < 2*1e-2
 
-    return test_quad && test_MC
+    if !(test_quad && test_MC)
+        throw("failed to solve VFI")
+    end
+    
 end 
 main()

@@ -1,6 +1,3 @@
-using Distributions, Random
-include("../src/RandomVaraibles.jl")
-include("../src/GaussHermiteRandomVariables.jl")
 Random.seed!(123)
 
 f(x) = sum(x)-sin(0.5*prod(x))
@@ -25,7 +22,9 @@ function main()
     EV_mc = 0.75*sum(fmc0)/Nmc + 0.25*sum(fmc1)/Nmc
 
     # compare results
-    return abs(EV_mc-EV_quad) < 3*sqrt(var(fmc0)+var(fmc1))/sqrt(2*Nmc)
+    if !(abs(EV_mc-EV_quad) < 3*sqrt(var(fmc0)+var(fmc1))/sqrt(2*Nmc))
+        throw("failed to calcualte integral with quadrature")
+    end
 end
 
 main()

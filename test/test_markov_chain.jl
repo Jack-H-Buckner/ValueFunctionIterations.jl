@@ -1,6 +1,5 @@
-include("../src/MarkovChain.jl")
 
-using StatsBase, Random 
+
 function main()
     Random.seed!(123)
     p = [0.59 0.4 0.2; 0.39 0.55 0.5; 0.02 0.05 0.3]
@@ -17,6 +16,8 @@ function main()
         x = xnew
     end
 
-    sum(abs.(pmc./sum(pmc,dims = 1) .- p)) < 0.02
+    if !(sum(abs.(pmc./sum(pmc,dims = 1) .- p)) < 0.02)
+        throw("fails to reproduce markov chain")
+    end 
 end
 main()
