@@ -6,4 +6,4 @@ ValueFunctionIterations.jl approximate the value function for the dynamic progra
 
 The solution to the dynamic program is stored in a DynamicProgram object. This stores the data used to define the problem along with the value and policy functions. The  
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue)](github.com/jack-h-buckner.github.io/ValueFunctionIterations.jl/dev/)
+[![Docs](https://img.shields.io/badge/docs-dev-blue)](https://jack-h-buckner.github.io/ValueFunctionIterations.jl/dev/)
