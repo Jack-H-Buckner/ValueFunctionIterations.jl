@@ -5,7 +5,7 @@ makedocs(
     sitename="ValueFunctionIterations.jl",
     modules  = [ValueFunctionIterations],
     format   = Documenter.HTML(; prettyurls = get(ENV, "CI", nothing) == "true"),
-    pages = ["index.md","API.md"]
+    pages = ["index.md","RandomVariables.md","API.md"]
 )
 
 deploydocs(
