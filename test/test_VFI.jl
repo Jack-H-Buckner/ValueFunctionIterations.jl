@@ -39,7 +39,7 @@ function main()
     Random.seed!(123)
     sample() = rand(Distributions.Normal(0,1.0),1,1)
     X = ValueFunctionIterations.MCRandomVariable(sample, 100)
-    sol_MC = ValueFunctionIterations.DynamicProgram(R, F, p, u,  X, δ, grid; tolerance = 1e-5, maxiter = 400)
+    sol_MC = ValueFunctionIterations.DynamicProgram(R, F, p, u,  X, δ, grid; solve = true, tolerance = 1e-5, maxiter = 400)
     test_MC = sum((theoretical.(grid,BMSY_) .- broadcast(s -> s - s*sol_MC.P(s)[1],grid)).^2) < 2*1e-2
 
     if !(test_quad && test_MC)
