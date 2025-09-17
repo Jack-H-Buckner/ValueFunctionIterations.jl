@@ -1,4 +1,4 @@
-using ValueFunctionIterations
+using ValueFunctionIterations, Random
 using Test
 
 @testset "UniversalDiffEq.jl" begin 
