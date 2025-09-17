@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>ValueFunctionIterations.jl · ValueFunctionIterations.jl</title><meta name="title" content="ValueFunctionIterations.jl · ValueFunctionIterations.jl"/><meta property="og:title" content="ValueFunctionIterations.jl · ValueFunctionIterations.jl"/><meta property="twitter:title" content="ValueFunctionIterations.jl · ValueFunctionIterations.jl"/><meta name="description" content="Documentation for ValueFunctionIterations.jl."/><meta property="og:description" content="Documentation for ValueFunctionIterations.jl."/><meta property="twitter:description" content="Documentation for ValueFunctionIterations.jl."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>ValueFunctionIterations.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>ValueFunctionIterations.jl</a><ul class="internal"><li><a class="tocitem" href="#How-to"><span>How to</span></a></li><li><a class="tocitem" href="#Package-contents"><span>Package contents</span></a></li></ul></li><li><a class="tocitem" href="API/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>ValueFunctionIterations.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>ValueFunctionIterations.jl</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/Jack-H-Buckner/ValueFunctionIterations.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/Jack-H-Buckner/ValueFunctionIterations.jl/blob/master/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="ValueFunctionIterations.jl"><a class="docs-heading-anchor" href="#ValueFunctionIterations.jl">ValueFunctionIterations.jl</a><a id="ValueFunctionIterations.jl-1"></a><a class="docs-heading-anchor-permalink" href="#ValueFunctionIterations.jl" title="Permalink"></a></h1><p>ValueFunctionIterations.jl is a package for solving stochastic dynamic programs using the value function  iteration algorithm. The library is designed to solve dynamic programs  with continuous state space, but it can also accomidate discrete state variables.</p><h2 id="How-to"><a class="docs-heading-anchor" href="#How-to">How to</a><a id="How-to-1"></a><a class="docs-heading-anchor-permalink" href="#How-to" title="Permalink"></a></h2><p>Dynamic programs are defined and solved using the DynamicProgram function. This function requires a function that defines the rewards <code>R(s,u,X,p)</code>, the state transition function <code>F(s,u,X,p)</code>, a componenet vector of parameters <code>p</code> defined usng the ComponentArrays library, a matrix <code>u</code> with all possible actions, a random variable object <code>X</code>, the discount factor <span>$\delta$</span>, and a regular set of grid point for each dimension of the state space <code>grid...</code>. The grids must be define as an AbstractRange (e.g., <code>0:0.1:1</code>) and the random variables <code>X</code> are defined using the AbstractRandomVariables interface. </p><p>The following example defines a dyamic progam to estimate the optimal rotation time for a timber stand that has some probability of experince damage before harvest. </p><pre><code class="language-julia hljs">using Plots, ValueFunctionIteration, ComponentArrays, Distribtions
+
+# Income from harvesting trees
+function R(s,u,X,p)
+    if X[1] == 0.0 &amp;&amp; u[1] == 0 # if neither damage or harvest recieve nothing
+        return 0
+    elseif u[1] == 1 # If harvesting occurs recive net revenue 
+        return s[1]-p.c
+    else X[1] == 1 # If damage occurs, harvest and revice the salvage value (X[2])
+        return X[2]*s[1]-p.c
+    end
+end
+
+# State update function 
+function F(s,u,X,p)
+    if X[1] == 0.0 &amp;&amp; u[1] == 0 # if neither damage or harvest allow growth
+        return s[1]*exp(p.r*(1-s[1]/p.k))
+    else  # If harvesting or damage occurs go to replanted biomass 
+        return 0.02
+    end
+end 
+
+# Parameters 
+# r: growth rate, k: maximum growth, c: cost of harvest, p_s: price for damaged timber 
+p = ComponentArray(r = 0.15, k = 1.0, c = 0.25)
+
+# Harvest levels (0 or 97.5%)
+u = action_space([0.0,1.0])
+
+# Damage levels (0 or 97.5%) and probabilities (0.99 and 0.01)
+X1 = RandomVariable([0.0 1.0;], [0.99, 0.01])
+
+# Define quadrature scheme for normally distributed salvage values using Gauss-Hermite quadrature 
+X2 = GaussHermiteRandomVariable(10,[0.5],[0.1^2;;])
+
+# Combine the two random variables 
+X = product(X1,X2)
+
+
+# Discount factor 
+δ = 0.99
+
+# Grid of stand sizes
+grid = 0.01:0.01:1.00
+
+# Define and solve the dynamic program
+sol = DynamicProgram(R, F, p, u,  X, δ, grid; tolerance = 1e-5)
+
+# Plot the policy function 
+Plots.plot(grid,broadcast(s -&gt; s - s*sol.P(s)[1],grid), xlabel = &quot;Standing timber&quot;,
+             ylabel = &quot;Board feet&quot;, label = &quot;Standing timber&quot;,linewidth = 2)
+Plots.plot!(grid,broadcast(s -&gt; s*sol.P(s)[1],grid), label = &quot;Harvest&quot;, linewidth = 2)
+plot!(size = (400,250))</code></pre><p><img src="figures/trees_policy.png" alt/></p><p>Once we have a solved problem we can run simulations under the optimal policy using the <code>simulate</code> function.</p><pre><code class="language-julia hljs">states,actions,rewards,vals=simulate(sol,100)
+Plots.plot(states[1,:], label = &quot;Standing timber&quot;, linewidth = 2)
+Plots.plot!(actions[1,:].*states[1,1:(end-1)], label = &quot;Harvest&quot;, linewidth = 2)
+Plots.plot!(vals[1:(end-1)], label = &quot;Present value&quot;, linewidth = 2)
+plot!(size = (400,250), xlabel = &quot;Time&quot;, ylabel = &quot;Value&quot;)</code></pre><p><img src="figures/trees_simulation.png" alt/> Dynamic programs can take along time to run so you can build a problem without running it and evaluate the computation time by setting the <code>solve</code> key word argument in the  <code>DynamicProgram</code> function to <code>false</code>. You can then run <code>estimate_time</code> on the model to evaluate performance bottle necks and then use <code>solve!</code> to run the model once you are happy with the predicted run time. </p><pre><code class="language-julia hljs">prob = DynamicProgram(R, F, p, u,  X, δ, grid; solve = false, tolerance = 1e-5)
+estimate_time(prob)
+solve!(prob)</code></pre><h2 id="Package-contents"><a class="docs-heading-anchor" href="#Package-contents">Package contents</a><a id="Package-contents-1"></a><a class="docs-heading-anchor-permalink" href="#Package-contents" title="Permalink"></a></h2><ul><li><a href="API/#API">API</a></li><li><a href="RandomVariables/#AbstractRandomVariables-interface">AbstractRandomVariables interface</a></li></ul></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="API/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Wednesday 17 September 2025 20:30">Wednesday 17 September 2025</span>. Using Julia version 1.10.10.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
