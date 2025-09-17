@@ -20,7 +20,7 @@ using ValueFunctionIterations
 ## Example
 
 ```julia
-using Plots, ValueFunctionIteration, ComponentArrays, Distribtions
+using Plots, ValueFunctionIterations, ComponentArrays, Distribtions
 
 # Income from harvesting trees
 function R(s,u,X,p)

@@ -11,7 +11,7 @@ The following example defines a dyamic progam to estimate the optimal rotation t
 
 
 ```julia
-using Plots, ValueFunctionIteration, ComponentArrays, Distribtions
+using Plots, ValueFunctionIterations, ComponentArrays, Distribtions
 
 # Income from harvesting trees
 function R(s,u,X,p)
