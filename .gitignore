@@ -1,0 +1,6 @@
+*.png
+*.csv
+*.ipynb
+docs/build/
+/Manifest.toml
+.ipynb_checkpoints
