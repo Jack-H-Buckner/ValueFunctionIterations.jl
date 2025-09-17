@@ -1,8 +1,8 @@
 # ValueFunctionIterations.jl
 
-[![Build Status](https://github.com/jack-h-buckner/ValueFunctionIterations.jl/actions/workflows/CI-V1-11.yml/badge.svg)]
+![Build Status](https://github.com/jack-h-buckner/ValueFunctionIterations.jl/actions/workflows/CI-V1-11.yml/badge.svg)
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue)](https://jack-h-buckner.github.io/ValueFunctionIterations.jl)
+[![Docs](https://img.shields.io/badge/docs-dev-blue)](https://jack-h-buckner.github.io/ValueFunctionIterations.jl/dev/)
 
 ValueFunctionIterations.jl provides a framework for solving stochastic dynamic programs with continuous states and discrete action spaces. Problems are defined by specifying a reward function `R` and state update function `F` which depend on the current state `s`, action `u`, randon varible `X` and model paramters `p`. The user also specifies the set of all possible actions `U`, a grid of the state space for the value and policy function approxiamtions and a discount factor $\delta \in [0,1)$. 
 
