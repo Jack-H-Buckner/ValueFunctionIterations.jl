@@ -153,8 +153,15 @@ function DynamicProgram(
     tolerance = 1e-5,
     maxiter = round(Int, 3/(1-δ)))
 
+    # initilaize value function
+    V = RegularGridBspline(grid...;v0 = v0, order = order_value , extrap = extrap)
+    ut = u(V.states[:,1],p)
+    Xt = X
+    if typeof(X) <: RandomVariableFunction
+        Xt = X(V.states[:,1],p)
+    end 
     # check that the problem is well defined
-    if !(abs(sum(X.weights).-1) <= 1e-4 )
+    if !(abs(sum(Xt.weights).-1) <= 1e-4 )
         print("The wieght in the random variable do not add to one, there might be an issue with your integration method.")
     end
 
@@ -164,8 +171,6 @@ function DynamicProgram(
 
 
     # initialize the value and policy function at v0
-    V = RegularGridBspline(grid...;v0 = v0, order = order_value , extrap = extrap)
-    ut = u(V.states[:,1],p)
     P = RegularGridBsplineList([V for i in 1:size(ut)[1]])
     DP = DynamicProgram{Function}(R,F,p,u,X,δ,V,P)
     if solve == true
@@ -194,9 +199,16 @@ Estimate how long a dynamic program will take to solve.
 function estimate_time(DP::DynamicProgram{Matrix{Float64}})
     threads= Threads.nthreads()
     iter = round(Int, 3/(1-DP.δ)) # estimated number of iterations
-    ncalculations = length(DP.X.weights)*size(DP.u)[2]*size(DP.V.states)[2] # number of calcualteion per iteration
+
+    # get an instance of the random variable 
+    Xt = DP.X
+    if typeof(DP.X) <: RandomVariableFunction
+        Xt = DP.X(DP.V.states[:,1],DP.p)
+    end 
+
+    ncalculations = length(Xt.weights)*size(DP.u)[2]*size(DP.V.states)[2] # number of calcualteion per iteration
     # define one update evluation
-    f() = DP.V(DP.F(DP.V.states[:,1],DP.u[:,1],DP.X.nodes[:,1],DP.p)...)+DP.R(DP.V.states[:,1],DP.u[:,1],DP.X.nodes[:,1],DP.p)
+    f() = DP.V(DP.F(DP.V.states[:,1],DP.u[:,1],Xt.nodes[:,1],DP.p)...)+DP.R(DP.V.states[:,1],DP.u[:,1],Xt.nodes[:,1],DP.p)
     f() # run once to deal with compilation
     t1 = time() 
     for _ in 1:1000 f() end
@@ -207,7 +219,7 @@ function estimate_time(DP::DynamicProgram{Matrix{Float64}})
             "Number of computations" => ncalculations, 
             "actions" => size(DP.u)[2],
             "states" => size(DP.V.states)[2],
-            "random variable samples" => length(DP.X.weights),
+            "random variable samples" => length(Xt.weights),
             "Estimated iterations" => iter,
             "Number of threads" => threads)
 end 
@@ -216,15 +228,22 @@ end
 function estimate_time(DP::DynamicProgram{Function})
     threads= Threads.nthreads()
     iter = round(Int, 3/(1-DP.δ)) # estimated number of iterations
+
+    # get an instance of the random variable 
+    Xt = DP.X
+    if typeof(DP.X) <: RandomVariableFunction
+        Xt = DP.X(DP.V.states[:,1],DP.p)
+    end 
+
     ncalculations = 0
     for i in 1:size(DP.V.states)[2]
         si = DP.V.states[:,i]
         ncalculations += size(DP.u(si,DP.p))[2]
     end 
-    ncalculations = length(DP.X.weights)*ncalculations # number of calcualteion per iteration
+    ncalculations = length(Xt.weights)*ncalculations # number of calcualteion per iteration
     # define one update evluation
     u1 = DP.u(DP.V.states[:,1],DP.p)
-    f() = DP.V(DP.F(DP.V.states[:,1],u1,DP.X.nodes[:,1],DP.p)...)+DP.R(DP.V.states[:,1],u1,DP.X.nodes[:,1],DP.p)
+    f() = DP.V(DP.F(DP.V.states[:,1],u1,Xt.nodes[:,1],DP.p)...)+DP.R(DP.V.states[:,1],u1,Xt.nodes[:,1],DP.p)
     f() # run once to deal with compilation
     t1 = time() 
     for _ in 1:1000 f() end
@@ -235,7 +254,7 @@ function estimate_time(DP::DynamicProgram{Function})
             "Number of computations" => ncalculations, 
             "actions" => "varaible",
             "states" => size(DP.V.states)[2],
-            "random variable samples" => length(DP.X.weights),
+            "random variable samples" => length(Xt.weights),
             "Estimated iterations" => iter,
             "Number of threads" => threads)
 end 
