@@ -1,7 +1,7 @@
 using ValueFunctionIterations, Random, StatsBase, Roots, Distributions, ComponentArrays
 using Test
 
-@testset "UniversalDiffEq.jl" begin 
+@testset "ValueFunctionIterations.jl" begin 
     include("test_markov_chain.jl")
     include("test_MC_integration.jl")
     include("test_quad_integration.jl")

@@ -1,12 +1,32 @@
 # ValueFunctionIterations.jl
 
-ValueFunctionIterations.jl is a package for solving stochastic dynamic programs using the value function  iteration algorithm. The library is designed to solve dynamic programs  with continuous state space, but it can also accomidate discrete state variables.
+ValueFunctionIterations.jl is a package for solving Markov decision processes (MDP) using the value function iteration algorithm. The library is designed to solve MDPs with continuous state variables, although, it can also accomidate discrete variables. 
+
+## Markov decision processes
+
+Markov decision processes are a type of optimization problem where a sequence of actions $u_t$ are chosen to maximize a sequence of rewards $R$ discounted into the future by a factor $\delta$. The rewards $R(s_t,u_t,X_t)$ depend on the action taken $u_t$, random events $X_t$ and thirds set of variables $s_t$ called state variables
+
+```math
+V = \underset{\text{max}}{\{u\}_t}\left\{\sum_{t=0}^{\infty}\delta R(u_t,s_t,X_t) \right\}.
+```
+The state variables are influnced by the actions $u_t$ creating cause and effect relationships between actions taken in the present and future rewards. These relationships are captured by a function called the state transition function $F(s_t,u_t,X_t)$ which determines the value of the state variables in the next period $s_{t+1}$.
+
+Markov decision provesses find the optimum sequence of action $u_t$ to maximize the discounted sum of rewards given the efect of each action on rewards in the present and on rewards in the future. Markov decision process also allow for there to be uncertianty in the relationship between current actions and future rewards captured by the random variable $X_t$. 
+
+Markov decision process can be solved using the Bellman equation which provides recursively calculates the expected value of the objective $V$ as a function of the current value fo the state variables $s_t$
+
+```math
+V(s_t) = \underset{\text{max}}{u_t}\left\{E_X[R(s_t,u_t,X_t)]+\delta E_X[V(s_t,u_t,X_t)] \right\}.
+```
+
+The Bellman equaiton can be solved by approximating the value function $V$ and the expectation operatoes $E_x$ numerically. This software package uses BSplines to approximate the value fucntion and allows useres to choose between Montecarlo integration and quadrature to solve the expectations.  
+
+Markov decision process are common in natural resource and financial economics where individuals make decision about how operate in uncertain environments where actions in the present influence future possibilities. For example, a retired persion might have to choose how to spend thier savings over time given uncertain returns on their investments and health expenses.  
 
 ## How to
+MDPs can be defined and solved using the DynamicProgram function. This function takesa function that defines the rewards `R(s,u,X,p)`, the state transition function `F(s,u,X,p)`, a component vector of parameters `p` defined usng the ComponentArrays library, a matrix `u` with all possible actions, a random variable object `X`, the discount factor $\delta$, and a regular set of grid point for each dimension of the state space `grid...`. The grids must be define as an AbstractRange (e.g., `0:0.1:1 `) and the random variables `X` are defined as and AbstractRandomVariable. Constructors for AbstractRandomVariables are included in the ValueFunctionIterations.jl package. 
 
-Dynamic programs are defined and solved using the DynamicProgram function. This function requires a function that defines the rewards `R(s,u,X,p)`, the state transition function `F(s,u,X,p)`, a componenet vector of parameters `p` defined usng the ComponentArrays library, a matrix `u` with all possible actions, a random variable object `X`, the discount factor $\delta$, and a regular set of grid point for each dimension of the state space `grid...`. The grids must be define as an AbstractRange (e.g., `0:0.1:1 `) and the random variables `X` are defined using the AbstractRandomVariables interface. 
-
-The following example defines a dyamic progam to estimate the optimal rotation time for a timber stand that has some probability of experince damage before harvest. 
+The following example defines a dyamic program to estimate the optimal rotation time for a timber stand that has some probability of experince damage before harvest. 
 
 
 
