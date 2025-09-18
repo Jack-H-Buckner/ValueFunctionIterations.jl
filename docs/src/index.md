@@ -24,7 +24,9 @@ The Bellman equaiton can be solved by approximating the value function $V$ and t
 Markov decision process are common in natural resource and financial economics where individuals make decision about how operate in uncertain environments where actions in the present influence future possibilities. For example, a retired persion might have to choose how to spend thier savings over time given uncertain returns on their investments and health expenses.  
 
 ## How to
-MDPs can be defined and solved using the DynamicProgram function. This function takesa function that defines the rewards `R(s,u,X,p)`, the state transition function `F(s,u,X,p)`, a component vector of parameters `p` defined usng the ComponentArrays library, a matrix `u` with all possible actions, a random variable object `X`, the discount factor $\delta$, and a regular set of grid point for each dimension of the state space `grid...`. The grids must be define as an AbstractRange (e.g., `0:0.1:1 `) and the random variables `X` are defined as and AbstractRandomVariable. Constructors for AbstractRandomVariables are included in the ValueFunctionIterations.jl package. 
+MDPs can be defined and solved using the DynamicProgram function. This function takes an `AbstractValueFunction` object `V` to approximate the value function, afunction that defines the rewards `R(s,u,X,p)`, the state transition function `F(s,u,X,p)`, a component vector of parameters `p` defined usng the ComponentArrays library, a matrix `u` with all possible actions, a random variable object `X`, and the discount factor $\delta$. The  random variables `X` are defined as and AbstractRandomVariable. Constructors for AbstractRandomVariables are included in the ValueFunctionIterations.jl package.
+
+the `AbstractValueFunction` objects to approximate the value function can be created using the `RegularGridBspline` functions or with the `DiscreteAndContinuous` function. The `DiscreteAndContinuous` function is primarily designed to be used when a discrete variable determines the possible values of one or more continuous state variables. 
 
 The following example defines a dyamic program to estimate the optimal rotation time for a timber stand that has some probability of experince damage before harvest. 
 
@@ -75,9 +77,11 @@ X = product(X1,X2)
 
 # Grid of stand sizes
 grid = 0.01:0.01:1.00
+V = ValueFunctionIterations.RegularGridBspline(grid)
+
 
 # Define and solve the dynamic program
-sol = DynamicProgram(R, F, p, u,  X, δ, grid; tolerance = 1e-5)
+sol = DynamicProgram(V,R, F, p, u,  X, δ; tolerance = 1e-5)
 
 # Plot the policy function 
 Plots.plot(grid,broadcast(s -> s - s*sol.P(s)[1],grid), xlabel = "Standing timber",

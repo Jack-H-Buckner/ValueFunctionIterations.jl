@@ -22,12 +22,12 @@ mutable struct DynamicProgram{action_type}
     X::AbstractRandomVariable
     δ::Float64 # discount factor
     V::AbstractValueFunction # value function
-    P::AbstractValueFunction # policy function
+    P::ValueFunctionList # policy function
 end
 
 
 function value_function_iteration!(
-    V::RegularGridBspline,
+    V::AbstractValueFunction,
     R::Function, # rewards 
     F::Function, # state update
     p::ComponentArray, # state update paramters
@@ -60,15 +60,49 @@ function interpolate_policy(
     u, # decision variables matrix or function 
     X::AbstractRandomVariable,
     δ::Float64, # discount factor
-    V::AbstractValueFunction;
+    V::RegularGridBspline;
     order = BSpline(Constant()))
 
     u_opt = policy(V.states,u,X,R,F,p,δ,V)
     splines = [RegularGridBspline(V,u_opt[i,:], order = order) for i in 1:size(u_opt)[1]]
 
-    return RegularGridBsplineList(reshape(splines,size(u_opt)[1]))
+    return ValueFunctionList{RegularGridBspline}(reshape(splines,size(u_opt)[1]))
 end 
 
+
+function interpolate_policy(
+    R::Function, # rewards 
+    F::Function, # state update
+    p::ComponentArray, # state pdate paramters
+    u, # decision variables matrix or function 
+    X::AbstractRandomVariable,
+    δ::Float64, # discount factor
+    V::DiscreteAndContinuous;
+    order = BSpline(Constant()))
+
+    u_opt = policy(V.states,u,X,R,F,p,δ,V)
+    splines = [DiscreteAndContinuous(V,u_opt[i,:],order = order) for i in 1:size(u_opt)[1]]
+
+    return ValueFunctionList(reshape(splines,size(u_opt)[1]))
+end 
+
+
+function number_of_actions(u,s,p)
+    if typeof(u) == "Matrix{Float64}"
+        return size(u)[1]
+    else 
+        return size(u(s,p))[1]
+    end
+end 
+
+
+function check_random_variable(X,s,p)
+    if typeof(X) <: RandomVariableFunction
+        return abs.(sum(X(s,p).weights) - 1) < 1e-3
+    else 
+        return abs.(sum(X.weights) - 1) < 1e-3
+    end
+end 
 """
     DynamicProgram(R::Function, F::Function,  p::ComponentArray, u::Matrix{Float64}, X::AbstractRandomVariable, δ::Float64, grid...; kwrds...  )
 
@@ -76,18 +110,16 @@ Solves a continuous state, discrete action dynamic optimization problem using va
 the solution as a DynamicProgram object. 
 ...
 # Arguments:
+    - V: the value function, a AbstractValueFunction object
     - R: the reward function, takes the form R(s,u,X,p) where s is the state and u is the decision variable, X is random varible inputs and p are paramters
     - F: the state update function, takes the form F(s,u,X,p). 
     - p: the state update parameters, ComponentArray it must be compatable with both R and F. 
     - u: the decision variables, a matrix where each column give a possibel valueof the decision variable u. 
     - X: the random variables, an AbstractRandomVariable object.
     - δ: the discount factor, Float64. 
-    - grid...: evenly spaced grid points for each dimension of the state space, variable number of arguents are allowed. 
 
 # Keyword arguments:
     - solve: whether to solve the problem, defaults to "conditional". The problem will not solve if the estiamted time is larger than ten minutes, this can be over ridden by setting solve = true to always solve or solvefalse to never solve. `.
-    - v0: the initial value of the value function, defaults to 0.0
-    - order_value: the order of the interpolation for the value function, defaults to Cubic(Line(OnGrid()))
     - order_policy: the order of the interpolation for the policyfunction, defaults to Constant()
     - extrap: the value to use for extrapolation, defaults to Float()
     - tolerance: the tolerance for VFI convergence, defaults to 1e-5
@@ -97,34 +129,38 @@ the solution as a DynamicProgram object.
     - a DynamicProgram object
 """
 function DynamicProgram(
+    V::AbstractValueFunction,
     R::Function, 
     F::Function, 
     p::ComponentArray, 
-    u::Matrix{Float64},
+    u, # matrix or function
     X::AbstractRandomVariable,
-    δ::Float64, grid...;
+    δ::Float64;
     solve = "conditional",
-    v0 = 0.0,
-    order_value = BSpline(Cubic(Line(OnGrid()))),
     order_policy = BSpline(Constant()),
     extrap = Flat(),
     tolerance = 1e-5,
     maxiter = round(Int, 3/(1-δ)))
 
-    # check that the problem is well defined
-    if !(abs(sum(X.weights).-1) <= 1e-4 )
-        print("The wieght in the random variable do not add to one, there might be an issue with your integration method.")
-    end
+    # get and instance of the state variables to use in checks
+    s = V.states[:,1] 
 
+    # check discount factor and random variable
     if !(δ<1)
         error("The discount factor delta must be less than one.")
     end
+    if !(check_random_variable(X,s,p))
+        print("The wieght in the random variable do not add to one, there might be an issue with your integration method.")
+    end
 
+    P = ValueFunctionList([V for i in 1:number_of_actions(u,s,p)])
+    DP = 0
+    if typeof(u)<:Function
+        DP = DynamicProgram{Function}(R,F,p,u,X,δ,V,P)
+    else
+        DP = DynamicProgram{Matrix{Float64}}(R,F,p,u,X,δ,V,P)
+    end
 
-    # initialize the value and policy function at v0
-    V = RegularGridBspline(grid...;v0 = v0, order = order_value , extrap = extrap)
-    P = RegularGridBsplineList([V for i in 1:size(u)[1]])
-    DP = DynamicProgram{Matrix{Float64}}(R,F,p,u,X,δ,V,P)
     if solve == true
         solve!(DP;order_policy=order_policy,tolerance=tolerance,maxiter=maxiter)
     elseif solve == "conditional"
@@ -138,53 +174,6 @@ function DynamicProgram(
     return DP
 end
 
-function DynamicProgram(
-    R::Function, 
-    F::Function, 
-    p::ComponentArray, 
-    u::Function,
-    X::AbstractRandomVariable,
-    δ::Float64, grid...;
-    solve = "conditional",
-    v0 = 0.0,
-    order_value = BSpline(Cubic(Line(OnGrid()))),
-    order_policy = BSpline(Constant()),
-    extrap = Flat(),
-    tolerance = 1e-5,
-    maxiter = round(Int, 3/(1-δ)))
-
-    # initilaize value function
-    V = RegularGridBspline(grid...;v0 = v0, order = order_value , extrap = extrap)
-    ut = u(V.states[:,1],p)
-    Xt = X
-    if typeof(X) <: RandomVariableFunction
-        Xt = X(V.states[:,1],p)
-    end 
-    # check that the problem is well defined
-    if !(abs(sum(Xt.weights).-1) <= 1e-4 )
-        print("The wieght in the random variable do not add to one, there might be an issue with your integration method.")
-    end
-
-    if !(δ<1)
-        error("The discount factor delta must be less than one.")
-    end
-
-
-    # initialize the value and policy function at v0
-    P = RegularGridBsplineList([V for i in 1:size(ut)[1]])
-    DP = DynamicProgram{Function}(R,F,p,u,X,δ,V,P)
-    if solve == true
-        solve!(DP;order_policy=order_policy,tolerance=tolerance,maxiter=maxiter)
-    elseif solve == "conditional"
-        if estimate_time(DP)[1][2] > 600
-            print("Estimated time to solve is greater than 10 minutes. \nUse the estimate_time function to check for perfornace bottelnecks or solve with the solve! function.")
-        else
-            solve!(DP;order_policy=order_policy,tolerance=tolerance,maxiter=maxiter)
-        end
-    end
-    
-    return DP
-end
 
 """
     estimate_time(DP::DynamicProgram)
@@ -243,7 +232,7 @@ function estimate_time(DP::DynamicProgram{Function})
     ncalculations = length(Xt.weights)*ncalculations # number of calcualteion per iteration
     # define one update evluation
     u1 = DP.u(DP.V.states[:,1],DP.p)
-    f() = DP.V(DP.F(DP.V.states[:,1],u1,Xt.nodes[:,1],DP.p)...)+DP.R(DP.V.states[:,1],u1,Xt.nodes[:,1],DP.p)
+    f() = DP.V(DP.F(DP.V.states[:,1],u1,Xt.nodes[:,1],DP.p))+DP.R(DP.V.states[:,1],u1,Xt.nodes[:,1],DP.p)
     f() # run once to deal with compilation
     t1 = time() 
     for _ in 1:1000 f() end

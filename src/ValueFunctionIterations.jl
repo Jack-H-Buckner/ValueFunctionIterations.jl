@@ -21,6 +21,6 @@ include("DynamicPrograms.jl")
 include("analysis.jl")
 include("action_spaces.jl")
 
-export DynamicProgram, RandomVariable, MarkovChain, MCRandomVariable, GaussHermiteRandomVariable, product, sample_discrete, sample_markov_chain, action_spaces, estimate_time, solve! 
+export DynamicProgram, RandomVariable, MarkovChain, MCRandomVariable, GaussHermiteRandomVariable, product, sample_discrete, sample_markov_chain, action_spaces, estimate_time, solve!, Constant, BSpline, Cubic, Line 
 
 end # module
