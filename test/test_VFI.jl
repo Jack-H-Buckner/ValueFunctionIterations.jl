@@ -23,17 +23,19 @@ function main()
     u = reshape(collect(fvals),1,length(fvals))
     δ = 0.999
     grid = 0.01:0.025:1.25 
+    V = ValueFunctionIterations.RegularGridBspline(grid)
 
     # solve with quadrature and test solution
     X = ValueFunctionIterations.GaussHermiteRandomVariable(10,[0.0],[1.0;;])
-    sol_quad = ValueFunctionIterations.DynamicProgram(R, F, p, u,  X, δ, grid; tolerance = 1e-5, maxiter = 400)
+    
+    sol_quad = ValueFunctionIterations.DynamicProgram(V, R, F, p, u,  X, δ; tolerance = 1e-5, maxiter = 400)
     test_quad = sum((theoretical.(grid,BMSY_) .- broadcast(s -> s - s*sol_quad.P(s)[1],grid)).^2) < 1e-3
 
     # solve with MC integration and test solution
     Random.seed!(123)
     sample() = rand(Distributions.Normal(0,1.0),1,1)
     X = ValueFunctionIterations.MCRandomVariable(sample, 50)
-    sol_MC = ValueFunctionIterations.DynamicProgram(R, F, p, u,  X, δ, grid; solve = true, tolerance = 1e-5, maxiter = 400)
+    sol_MC = ValueFunctionIterations.DynamicProgram(V,R, F, p, u,  X, δ; solve = true, tolerance = 1e-5, maxiter = 400)
     test_MC = sum((theoretical.(grid,BMSY_) .- broadcast(s -> s - s*sol_MC.P(s)[1],grid)).^2) < 5*1e-2
 
     if !(test_quad && test_MC)
@@ -49,11 +51,12 @@ function main()
     u_(s,p) = reshape(collect(0.0:0.02:s[1]),1,length(0.0:0.02:s[1])) 
     δ = 0.999
     grid = 0.01:0.025:1.25
+    V = ValueFunctionIterations.RegularGridBspline(grid)
     
 
     # solve with quadrature and test solution
     X = ValueFunctionIterations.GaussHermiteRandomVariable(10,[0.0],[1.0;;])
-    sol_quad = ValueFunctionIterations.DynamicProgram(R, F, p, u_,  X, δ, grid; tolerance = 1e-5, maxiter = 400)
+    sol_quad = ValueFunctionIterations.DynamicProgram(V,R, F, p, u_,  X, δ; tolerance = 1e-5, maxiter = 400)
     test_quad = sum((theoretical.(grid,BMSY_) .- broadcast(s -> s - sol_quad.P(s)[1],grid)).^2) < 1e-2
 
     if !(test_quad)
