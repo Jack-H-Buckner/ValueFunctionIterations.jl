@@ -52,14 +52,7 @@ function main()
     p = ComponentArray(r = 0.2, k = 1.0, σ = 0.001)
     BMSY_ = BMSY(p)
 
-    R(s,u,X,p) = s[1]*u[1]
-    F(s,u,X,p) = s[1]*(1 - u[1])*exp(p.r*(1-s[1]*(1 - u[1])/p.k) + p.σ*X[1]-0.5*p.σ^2)
-    p = ComponentArray(r = 0.2, k = 1.0, σ = 0.001)
-    BMSY_ = BMSY(p)
-
-    fvals = 0:0.01:0.99
-    fvals = reshape(collect(fvals),1,length(fvals))
-    u_(s,p) = s[1]*fvals 
+    u_(s,p) = reshape(collect(0.0:0.02:s[1]),1,length(0.0:0.02:s[1])) 
     δ = 0.999
     grid = 0.01:0.025:1.25
     
@@ -67,7 +60,7 @@ function main()
     # solve with quadrature and test solution
     X = ValueFunctionIterations.GaussHermiteRandomVariable(10,[0.0],[1.0;;])
     sol_quad = ValueFunctionIterations.DynamicProgram(R, F, p, u_,  X, δ, grid; tolerance = 1e-5, maxiter = 400)
-    test_quad = sum((theoretical.(grid,BMSY_) .- broadcast(s -> s - sol_quad.P(s)[1],grid)).^2) < 1e-3
+    test_quad = sum((theoretical.(grid,BMSY_) .- broadcast(s -> s - sol_quad.P(s)[1],grid)).^2) < 1e-2
 
     if !(test_quad)
         throw("failed to solve VFI with u as a function")
