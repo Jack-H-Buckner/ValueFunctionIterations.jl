@@ -57,6 +57,23 @@ function Q(s::Vector{Float64}, # state variables
     return sum(w.*rt) + δ*Vt
 end
 
+function Q(s::Vector{Float64}, # state variables 
+            u::Vector{Float64},# decision variables
+            X::RandomVariableFunction,
+            R::Function, # rewards 
+            F::Function, # state update
+            p::ComponentArray, # state update paramters
+            δ::Float64, # discount factor
+            V::AbstractValueFunction) # value funciton
+    Xt = X(s,p) # resample the random variables
+    w = Xt.weights
+    Xt_ = Xt.nodes
+    rt = broadcast(i->R(s,u,Xt_[:,i],p), 1:size(Xt.nodes)[2]) # rewards depend on the state and decision variables
+    Vt = broadcast(i->V(F(s,u,Xt_[:,i],p)), 1:size(Xt.nodes)[2])
+    Vt = sum(w.*Vt)
+    return sum(w.*rt) + δ*Vt
+end
+
 function ENPV(s::Vector{Float64}, # state variables 
             u::Matrix{Float64},# decision variables
             X::AbstractRandomVariable,

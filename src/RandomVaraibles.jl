@@ -63,4 +63,11 @@ function product(X::RandomVariable, Y::RandomVariable)
 end
 
 
+mutable struct RandomVariableFunction <: AbstractRandomVariable
+    F::Function
+end 
+
+function (X::RandomVariableFunction)(s::Vector{Float64},p::ComponentArray)
+    X.F(s,p)
+end 
 
