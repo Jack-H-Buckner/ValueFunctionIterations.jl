@@ -73,8 +73,24 @@ function ENPV(s::Vector{Float64}, # state variables
     return ENPV, u_opt
 end
 
+function ENPV(s::Vector{Float64}, # state variables 
+            u::Function,# decision variables
+            X::AbstractRandomVariable,
+            R::Function, # rewards 
+            F::Function, # state update
+            p::ComponentArray, # state pdate paramters
+            δ::Float64, # discount factor
+            V::AbstractValueFunction) # value funciton
+    ut = u(s,p)
+    Qs = broadcast(i->Q(s,ut[:,i],X,R,F,p,δ,V),1:size(ut)[2])
+    ind = argmax(Qs)
+    ENPV = Qs[ind]
+    u_opt = ut[:,ind]
+    return ENPV, u_opt
+end
+
 function bellman(s::Matrix{Float64}, # state variables 
-            u::Matrix{Float64},# decision variables
+            u, # decision variables function or matrix
             X::AbstractRandomVariable,
             R::Function, # rewards 
             F::Function, # state update
@@ -91,7 +107,7 @@ end
 
 
 function policy(s::Matrix{Float64}, # state variables 
-            u::Matrix{Float64},# decision variables
+            u::Matrix{Float64}, # decision variables 
             X::AbstractRandomVariable,
             R::Function, # rewards 
             F::Function, # state update
@@ -106,3 +122,18 @@ function policy(s::Matrix{Float64}, # state variables
     return u_opt
 end 
 
+function policy(s::Matrix{Float64}, # state variables 
+            u::Function, # decision variables 
+            X::AbstractRandomVariable,
+            R::Function, # rewards 
+            F::Function, # state update
+            p::ComponentArray, # state pdate paramters
+            δ::Float64, # discount factor
+            V::AbstractValueFunction) # value funciton
+    udims = size(u(s[:,1],p))[1]
+    u_opt = zeros(udims,size(s)[2])
+    Threads.@threads for i in 1:size(s)[2]
+        u_opt[:,i]=ENPV(s[:,i],u,X,R,F,p,δ,V)[2]
+    end
+    return u_opt
+end 
