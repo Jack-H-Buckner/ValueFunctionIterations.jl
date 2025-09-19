@@ -71,3 +71,7 @@ function (X::RandomVariableFunction)(s::Vector{Float64},p::ComponentArray)
     X.F(s,p)
 end 
 
+
+
+
+

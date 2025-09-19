@@ -84,3 +84,9 @@ function GaussHermiteRandomVariable(m::Int64,mu::AbstractVector{Float64},Cov::Ab
 
     return RandomVariable(nodes, weights)
 end 
+
+
+function RandomVariable(m::Int,mu::Vector{Float64},Cov::Matrix{Float64})
+    return GaussHermiteRandomVariable(m,mu,Cov)
+end
+
