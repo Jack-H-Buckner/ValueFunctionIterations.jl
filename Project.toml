@@ -1,7 +1,7 @@
 name = "ValueFunctionIterations"
 uuid = "dc40bd75-440c-4f41-8fab-869df1870d2c"
 authors = ["Jack Buckner <bucknejo@oregonstate.edu>"]
-version = "0.3.1"
+version = "0.3.2"
 
 [deps]
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
