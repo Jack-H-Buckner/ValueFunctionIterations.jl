@@ -146,3 +146,11 @@ function update!(x::DiscreteAndContinuous, values)
     return nothing
 end 
 
+
+function ValueFunction(grid...;kwargs...)
+    RegularGridBspline(grid...;kwargs...)
+end 
+
+function ValueFunction(N,grids;kwargs...)
+    DiscreteAndContinuous(N::Int,grids;kwargs...)
+end 

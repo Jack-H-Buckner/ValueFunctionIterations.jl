@@ -109,3 +109,13 @@ function MCRandomVariable(sample::Function, X::RandomVariable, N::Int)
     return MC
 end 
 
+
+function RandomVariable(sample::Function, N::Int)
+    return MCRandomVariable(sample, N)
+end
+
+
+function RandomVariable(sample::Function, N::Int, nodes::Matrix, weights::Vector)
+    X =  RandomVariable(nodes,weights)
+    return MCRandomVariable(sample, X, N)
+end
