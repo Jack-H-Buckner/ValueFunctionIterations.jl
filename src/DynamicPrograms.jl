@@ -88,7 +88,7 @@ end
 
 
 function number_of_actions(u,s,p)
-    if typeof(u) == "Matrix{Float64}"
+    if typeof(u) <: Matrix{Float64}
         return size(u)[1]
     else 
         return size(u(s,p))[1]
