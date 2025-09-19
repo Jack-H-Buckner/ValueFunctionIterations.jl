@@ -135,7 +135,7 @@ end
 
 
 function (x::DiscreteAndContinuous)(state)
-    return x.Bslines[round(Int,state[1])](state[2:end]...)
+    return x.Bslines[round(Int,state[1])](state[2:end])
 end 
 
 
