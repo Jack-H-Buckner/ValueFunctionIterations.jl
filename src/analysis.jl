@@ -23,9 +23,16 @@ function simulate(DP::DynamicProgram{Matrix{Float64}},T::Int)
     values[1] = DP.V(states[:,1])
     actions = zeros(size(DP.u)[1],T)
     rewards = zeros(T)
-    randos = zeros(size(DP.X.nodes)[1],T)
+    X = DP.X
+    if typeof(DP.X) <: RandomVariableFunction
+        Xt = X(states[:,1],DP.p)
+    end 
+    randos = zeros(size(Xt.nodes)[1],T)
     
     for t in 1:T
+        if typeof(DP.X) <: RandomVariableFunction
+            Xt = X(states[:,t],DP.p)
+        end 
         ind = sample(eachindex(DP.X.weights),Weights(DP.X.weights))
         randos[:,t] .= DP.X.nodes[:,ind]
         actions[:,t] .= DP.P(states[:,t])
@@ -44,11 +51,18 @@ function simulate(DP::DynamicProgram{Function},T::Int)
     values[1] = DP.V(states[:,1])
     actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
     rewards = zeros(T)
-    randos = zeros(size(DP.X.nodes)[1],T)
+    X = DP.X
+    if typeof(DP.X) <: RandomVariableFunction
+        Xt = X(states[:,1],DP.p)
+    end 
+    randos = zeros(size(Xt.nodes)[1],T)
     
     for t in 1:T
-        ind = sample(eachindex(DP.X.weights),Weights(DP.X.weights))
-        randos[:,t] .= DP.X.nodes[:,ind]
+        if typeof(DP.X) <: RandomVariableFunction
+            Xt = X(states[:,t],DP.p)
+        end 
+        ind = sample(eachindex(Xt.weights),Weights(Xt.weights))
+        randos[:,t] .= Xt.nodes[:,ind]
         actions[:,t] .= DP.P(states[:,t])
         rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
