@@ -16,11 +16,11 @@ and value in a vector of size T+1.
     - the rewards in a vector of size T
     - the values in a vector of size T+1
 """
-function simulate(DP::DynamicProgram,T::Int)
-    states = zeros(length(DP.V.dims),T+1)
+function simulate(DP::DynamicProgram{Matrix{Float64}},T::Int)
+    states = zeros(size(DP.V.states)[1],T+1)
     states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
     values = zeros(T+1)
-    values[1] = DP.V(states[:,1]...)
+    values[1] = DP.V(states[:,1])
     actions = zeros(size(DP.u)[1],T)
     rewards = zeros(T)
     randos = zeros(size(DP.X.nodes)[1],T)
@@ -28,10 +28,31 @@ function simulate(DP::DynamicProgram,T::Int)
     for t in 1:T
         ind = sample(eachindex(DP.X.weights),Weights(DP.X.weights))
         randos[:,t] .= DP.X.nodes[:,ind]
-        actions[:,t] .= DP.P(states[:,t]...)
+        actions[:,t] .= DP.P(states[:,t])
         rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
-        values[t+1] = DP.V(states[:,t+1]...)
+        values[t+1] = DP.V(states[:,t+1])
+    end
+    return states,actions,rewards,values
+end 
+
+
+function simulate(DP::DynamicProgram{Function},T::Int)
+    states = zeros(size(DP.V.states)[1],T+1)
+    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    values = zeros(T+1)
+    values[1] = DP.V(states[:,1])
+    actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
+    rewards = zeros(T)
+    randos = zeros(size(DP.X.nodes)[1],T)
+    
+    for t in 1:T
+        ind = sample(eachindex(DP.X.weights),Weights(DP.X.weights))
+        randos[:,t] .= DP.X.nodes[:,ind]
+        actions[:,t] .= DP.P(states[:,t])
+        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
+        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
+        values[t+1] = DP.V(states[:,t+1])
     end
     return states,actions,rewards,values
 end 
