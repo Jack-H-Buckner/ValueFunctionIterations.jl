@@ -16,50 +16,29 @@ and value in a vector of size T+1.
     - the rewards in a vector of size T
     - the values in a vector of size T+1
 """
-function simulate(DP::DynamicProgram{Matrix{Float64}},T::Int)
+function simulate(DP::DynamicProgram,T::Int;with_policy = false)
+    if with_policy
+        return simulate_policy(DP,T)
+    end
+    return simulate_solve(DP,T)
+end 
+
+function simulate_policy(DP::DynamicProgram{Matrix{Float64}},T::Int)
     states = zeros(size(DP.V.states)[1],T+1)
     states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
     values = zeros(T+1)
     values[1] = DP.V(states[:,1])
     actions = zeros(size(DP.u)[1],T)
     rewards = zeros(T)
-    X = DP.X
+    Xt = DP.X
     if typeof(DP.X) <: RandomVariableFunction
-        Xt = X(states[:,1],DP.p)
+        Xt = DP.X(states[:,1],DP.p)
     end 
     randos = zeros(size(Xt.nodes)[1],T)
     
     for t in 1:T
         if typeof(DP.X) <: RandomVariableFunction
-            Xt = X(states[:,t],DP.p)
-        end 
-        ind = sample(eachindex(DP.X.weights),Weights(DP.X.weights))
-        randos[:,t] .= DP.X.nodes[:,ind]
-        actions[:,t] .= DP.P(states[:,t])
-        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
-        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
-        values[t+1] = DP.V(states[:,t+1])
-    end
-    return states,actions,rewards,values
-end 
-
-
-function simulate(DP::DynamicProgram{Function},T::Int)
-    states = zeros(size(DP.V.states)[1],T+1)
-    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
-    values = zeros(T+1)
-    values[1] = DP.V(states[:,1])
-    actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
-    rewards = zeros(T)
-    X = DP.X
-    if typeof(DP.X) <: RandomVariableFunction
-        Xt = X(states[:,1],DP.p)
-    end 
-    randos = zeros(size(Xt.nodes)[1],T)
-    
-    for t in 1:T
-        if typeof(DP.X) <: RandomVariableFunction
-            Xt = X(states[:,t],DP.p)
+            Xt = DP.X(states[:,t],DP.p)
         end 
         ind = sample(eachindex(Xt.weights),Weights(Xt.weights))
         randos[:,t] .= Xt.nodes[:,ind]
@@ -71,6 +50,87 @@ function simulate(DP::DynamicProgram{Function},T::Int)
     return states,actions,rewards,values
 end 
 
+
+function simulate_solve(DP::DynamicProgram{Matrix{Float64}},T::Int)
+    states = zeros(size(DP.V.states)[1],T+1)
+    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    values = zeros(T)
+    actions = zeros(size(DP.u)[1],T)
+    rewards = zeros(T)
+    Xt = DP.X
+    if typeof(DP.X) <: RandomVariableFunction
+        Xt = DP.X(states[:,1],DP.p)
+    end 
+    randos = zeros(size(Xt.nodes)[1],T)
+    
+    for t in 1:T
+        if typeof(DP.X) <: RandomVariableFunction
+            Xt = DP.X(states[:,t],DP.p)
+        end 
+        V,u = ENPV(states[:,t], DP.u, Xt, DP.R, DP.F, DP.p, DP.δ, DP.V)
+        values[t] = V; actions[:,t] .= u
+        ind = sample(eachindex(Xt.weights),Weights(Xt.weights))
+        randos[:,t] .= Xt.nodes[:,ind]
+        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
+        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
+    end
+    return states,actions,rewards,values
+end 
+
+function simulate_policy(DP::DynamicProgram{Function},T::Int)
+    states = zeros(size(DP.V.states)[1],T+1)
+    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    values = zeros(T+1)
+    values[1] = DP.V(states[:,1])
+    actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
+    rewards = zeros(T)
+    Xt = DP.X
+    if typeof(DP.X) <: RandomVariableFunction
+        Xt = DP.X(states[:,1],DP.p)
+    end 
+    randos = zeros(size(Xt.nodes)[1],T)
+    
+    for t in 1:T
+        if typeof(DP.X) <: RandomVariableFunction
+            Xt = DP.X(states[:,t],DP.p)
+        end  
+        ind = sample(eachindex(Xt.weights),Weights(Xt.weights))
+        randos[:,t] .= Xt.nodes[:,ind]
+        actions[:,t] .= DP.P(states[:,t])
+        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
+        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
+        values[t+1] = DP.V(states[:,t+1])
+    end
+    return states,actions,rewards,values
+end 
+
+
+function simulate_solve(DP::DynamicProgram{Function},T::Int)
+    states = zeros(size(DP.V.states)[1],T+1)
+    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    values = zeros(T)
+    actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
+    rewards = zeros(T)
+    Xt = DP.X
+    if typeof(DP.X) <: RandomVariableFunction
+        Xt = DP.X(states[:,1],DP.p)
+    end 
+    randos = zeros(size(Xt.nodes)[1],T)
+    
+    for t in 1:T
+        if typeof(DP.X) <: RandomVariableFunction
+            Xt = DP.X(states[:,t],DP.p)
+        end 
+        V,u = ENPV(states[:,t], DP.u(states[:,t],DP.p), Xt, DP.R, DP.F, DP.p, DP.δ, DP.V)
+        values[t] = V; actions[:,t] .= u
+        ind = sample(eachindex(Xt.weights),Weights(Xt.weights))
+        randos[:,t] .= Xt.nodes[:,ind]
+        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
+        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
+
+    end
+    return states,actions,rewards,values
+end 
 """
     simulate(DP::DynamicProgram,X::MCRandomVariable,T::Int)
 
