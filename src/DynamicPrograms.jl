@@ -268,3 +268,24 @@ function solve!(DP::DynamicProgram; order_policy = BSpline(Constant()),tolerance
     DP.P = P
     return nothing
 end
+
+"""
+    save_solution(DP,filename)
+
+Saves the value and policy functions of the dynamic program `DP` to the file `filename`.
+"""
+function save_solution(DP,filename)
+    Vfun = DP.V; Pfun = DP.P
+    @save  filename Vfun Pfun
+end 
+
+"""
+    load_solution(DP,filename)
+
+Load the value and policy functions at `filename`, adn over write the policy and 
+value functions in the dynamic program `DP`.
+"""
+function load_solution(DP,filename)
+    @load filename Vfun Pfun
+    DP.V = Vfun; DP.P = Pfun
+end 

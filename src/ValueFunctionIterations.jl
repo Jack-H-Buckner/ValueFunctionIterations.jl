@@ -12,7 +12,7 @@
 
 module ValueFunctionIterations
 
-using Interpolations, FastGaussQuadrature, LinearAlgebra, ComponentArrays, StatsBase, ProgressMeter 
+using Interpolations, FastGaussQuadrature, LinearAlgebra, ComponentArrays, StatsBase, ProgressMeter, JLD2 
 
 include("AbstractRandomVariables.jl")
 include("ValueFunctions.jl")
@@ -21,6 +21,6 @@ include("DynamicPrograms.jl")
 include("analysis.jl")
 include("action_spaces.jl")
 
-export DynamicProgram, RandomVariable, ValueFunction, MarkovChain, MCRandomVariable, GaussHermiteRandomVariable, product, sample_discrete, sample_markov_chain, action_spaces, estimate_time, solve!, Constant, BSpline, Cubic, Line, simulate 
+export DynamicProgram, RandomVariable, ValueFunction, MarkovChain, MCRandomVariable, GaussHermiteRandomVariable, product, sample_discrete, sample_markov_chain, action_spaces, estimate_time, solve!, Constant, BSpline, Cubic, Line, simulate, save_solution, load_solution 
 
 end # module
