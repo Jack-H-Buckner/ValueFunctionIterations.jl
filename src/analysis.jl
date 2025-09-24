@@ -47,7 +47,7 @@ function simulate_policy(DP::DynamicProgram{Matrix{Float64}},T::Int)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
         values[t+1] = DP.V(states[:,t+1])
     end
-    return states,actions,rewards,values
+    return states,actions,rewards,values,randos
 end 
 
 
@@ -74,7 +74,7 @@ function simulate_solve(DP::DynamicProgram{Matrix{Float64}},T::Int)
         rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
     end
-    return states,actions,rewards,values
+    return states,actions,rewards,values,randos
 end 
 
 function simulate_policy(DP::DynamicProgram{Function},T::Int)
@@ -101,7 +101,7 @@ function simulate_policy(DP::DynamicProgram{Function},T::Int)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
         values[t+1] = DP.V(states[:,t+1])
     end
-    return states,actions,rewards,values
+    return states,actions,rewards,values,randos
 end 
 
 
@@ -129,7 +129,7 @@ function simulate_solve(DP::DynamicProgram{Function},T::Int)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
 
     end
-    return states,actions,rewards,values
+    return states,actions,rewards,values,randos
 end 
 """
     simulate(DP::DynamicProgram,X::MCRandomVariable,T::Int)
