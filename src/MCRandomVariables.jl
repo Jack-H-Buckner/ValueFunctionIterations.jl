@@ -32,7 +32,7 @@ end
 
 function (MC::MCRandomVariable)()
     for i in 1:MC.N
-        MC.nodes[1:MC.dims,i] = MC.sample()
+        MC.nodes[1:MC.dims,i] .= MC.sample()
     end
 end 
 
@@ -101,7 +101,7 @@ function MCRandomVariable(sample::Function, X::RandomVariable, N::Int)
     k = 0
     for (i,j) in Iterators.product(1:N,1:size(X.nodes)[2])
         k +=1
-        nodes[:,k] = vcat(sample(),X.nodes[:,j])
+        nodes[:,k] .= vcat(sample(),X.nodes[:,j])
         weights[k] = X.weights[j]*1/N
     end
     MC = MCRandomVariable(Nsample, new_dims, nodes, weights, sample)

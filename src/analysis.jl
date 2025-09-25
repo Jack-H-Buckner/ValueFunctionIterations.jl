@@ -16,16 +16,19 @@ and value in a vector of size T+1.
     - the rewards in a vector of size T
     - the values in a vector of size T+1
 """
-function simulate(DP::DynamicProgram,T::Int;with_policy = false)
-    if with_policy
-        return simulate_policy(DP,T)
+function simulate(DP::DynamicProgram,T::Int;with_policy = false, s0 = nothing)
+    if s0 == nothing
+        s0 = DP.V.states[:,rand(1:size(DP.V.states)[2])]
     end
-    return simulate_solve(DP,T)
+    if with_policy
+        return simulate_policy(DP,T,s0)
+    end
+    return simulate_solve(DP,T,s0)
 end 
 
-function simulate_policy(DP::DynamicProgram{Matrix{Float64}},T::Int)
+function simulate_policy(DP::DynamicProgram{Matrix{Float64}},T::Int,s0::AbstractVector{Float64})
     states = zeros(size(DP.V.states)[1],T+1)
-    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    states[:,1] .= s0
     values = zeros(T+1)
     values[1] = DP.V(states[:,1])
     actions = zeros(size(DP.u)[1],T)
@@ -51,9 +54,9 @@ function simulate_policy(DP::DynamicProgram{Matrix{Float64}},T::Int)
 end 
 
 
-function simulate_solve(DP::DynamicProgram{Matrix{Float64}},T::Int)
+function simulate_solve(DP::DynamicProgram{Matrix{Float64}},T::Int,s0::AbstractVector{Float64})
     states = zeros(size(DP.V.states)[1],T+1)
-    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    states[:,1] .= s0
     values = zeros(T)
     actions = zeros(size(DP.u)[1],T)
     rewards = zeros(T)
@@ -77,9 +80,9 @@ function simulate_solve(DP::DynamicProgram{Matrix{Float64}},T::Int)
     return states,actions,rewards,values,randos
 end 
 
-function simulate_policy(DP::DynamicProgram{Function},T::Int)
+function simulate_policy(DP::DynamicProgram{Function},T::Int,s0::AbstractVector{Float64})
     states = zeros(size(DP.V.states)[1],T+1)
-    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    states[:,1] .= s0
     values = zeros(T+1)
     values[1] = DP.V(states[:,1])
     actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
@@ -105,9 +108,9 @@ function simulate_policy(DP::DynamicProgram{Function},T::Int)
 end 
 
 
-function simulate_solve(DP::DynamicProgram{Function},T::Int)
+function simulate_solve(DP::DynamicProgram{Function},T::Int,s0::AbstractVector{Float64})
     states = zeros(size(DP.V.states)[1],T+1)
-    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    states[:,1] .= s0
     values = zeros(T)
     actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
     rewards = zeros(T)
@@ -151,9 +154,20 @@ and value in a vector of size T+1.
     - the rewards in a vector of size T
     - the values in a vector of size T+1
 """
-function simulate(DP::DynamicProgram,X::MCRandomVariable,T::Int)
+function simulate(DP::DynamicProgram,X::MCRandomVariable,T::Int;with_policy = false,s0=nothing)
+    if s0 == nothing
+        s0 = DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    end
+    if with_policy
+        return simulate_policy(DP,X,T,s0)
+    end
+    return simulate_solve(DP,X,T,s0)
+end 
+
+
+function simulate_policy(DP::DynamicProgram{Matrix{Float64}},X::MCRandomVariable,T::Int,s0::AbstractVector{Float64})
     states = zeros(length(DP.V.dims),T+1)
-    states[:,1] .= DP.V.states[:,rand(1:size(DP.V.states)[2])]
+    states[:,1] .= s0
     values = zeros(T+1)
     values[1] = DP.V(states[:,1]...)
     actions = zeros(size(DP.u)[1],T)
@@ -168,8 +182,81 @@ function simulate(DP::DynamicProgram,X::MCRandomVariable,T::Int)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
         values[t+1] = DP.V(states[:,t+1]...)
     end
-    return states,actions,rewards,values
+    return states,actions,rewards,values,randos
 end 
+
+
+function simulate_solve(DP::DynamicProgram{Matrix{Float64}},X::MCRandomVariable,T::Int,s0::AbstractVector{Float64})
+
+    states = zeros(size(DP.V.states)[1],T+1)
+    states[:,1] .= s0
+    values = zeros(T)
+    actions = zeros(size(DP.u)[1],T)
+    rewards = zeros(T)
+    randos = zeros(size(X.nodes)[1],T)
+    
+
+    for t in 1:T
+        X(); Xt = DP.X
+        if typeof(DP.X) <: RandomVariableFunction
+            Xt = DP.X(states[:,t],DP.p)
+        end
+        V,u = ENPV(states[:,t], DP.u, Xt, DP.R, DP.F, DP.p, DP.δ, DP.V)
+        values[t] = V; actions[:,t] .= u
+        randos[:,t] .= X.nodes[:,1]
+        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
+        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
+    end
+    return states,actions,rewards,values,randos
+
+end 
+
+
+function simulate_policy(DP::DynamicProgram{Function},X::MCRandomVariable,T::Int,s0::AbstractVector{Float64})
+    states = zeros(length(DP.V.dims),T+1)
+    states[:,1] .= s0
+    values = zeros(T+1)
+    values[1] = DP.V(states[:,1]...)
+    actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
+    rewards = zeros(T)
+    randos = zeros(size(X.nodes)[1],T)
+    
+    for t in 1:T
+        X() # update the random variables
+        randos[:,t] .= X.nodes[:,1]
+        actions[:,t] .= DP.P(states[:,t]...)
+        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
+        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
+        values[t+1] = DP.V(states[:,t+1]...)
+    end
+    return states,actions,rewards,values,randos
+end 
+
+
+function simulate_solve(DP::DynamicProgram{Function},X::MCRandomVariable,T::Int,s0::AbstractVector{Float64})
+
+    states = zeros(size(DP.V.states)[1],T+1)
+    states[:,1] .= s0
+    values = zeros(T)
+    actions = zeros(size(DP.u(states[:,1],DP.p))[1],T)
+    rewards = zeros(T)
+    randos = zeros(size(X.nodes)[1],T)
+    
+    for t in 1:T
+        X(); Xt = DP.X
+        if typeof(DP.X) <: RandomVariableFunction
+            Xt = DP.X(states[:,t],DP.p)
+        end
+        V,u = ENPV(states[:,t], DP.u(states[:,t],DP.p), Xt, DP.R, DP.F, DP.p, DP.δ, DP.V)
+        values[t] = V; actions[:,t] .= u
+        randos[:,t] .= X.nodes[:,1]
+        rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
+        states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
+    end
+    return states,actions,rewards,values,randos
+
+end 
+
 
 """
     get_value_function(DP::DynamicProgram)
