@@ -176,7 +176,7 @@ function simulate_policy(DP::DynamicProgram{Matrix{Float64}},X::MCRandomVariable
     
     for t in 1:T
         X() # update the random variables
-        randos[:,t] .= X.nodes[:,1]
+        randos[:,t] .= X.nodes[:,sample(1:length(X.weights),Weights(X.weights))]
         actions[:,t] .= DP.P(states[:,t]...)
         rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
@@ -203,7 +203,7 @@ function simulate_solve(DP::DynamicProgram{Matrix{Float64}},X::MCRandomVariable,
         end
         V,u = ENPV(states[:,t], DP.u, Xt, DP.R, DP.F, DP.p, DP.δ, DP.V)
         values[t] = V; actions[:,t] .= u
-        randos[:,t] .= X.nodes[:,1]
+        randos[:,t] .= X.nodes[:,sample(1:length(X.weights),Weights(X.weights))]
         rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
     end
@@ -223,7 +223,7 @@ function simulate_policy(DP::DynamicProgram{Function},X::MCRandomVariable,T::Int
     
     for t in 1:T
         X() # update the random variables
-        randos[:,t] .= X.nodes[:,1]
+        randos[:,t] .= X.nodes[:,sample(1:length(X.weights),Weights(X.weights))]
         actions[:,t] .= DP.P(states[:,t]...)
         rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
@@ -249,7 +249,7 @@ function simulate_solve(DP::DynamicProgram{Function},X::MCRandomVariable,T::Int,
         end
         V,u = ENPV(states[:,t], DP.u(states[:,t],DP.p), Xt, DP.R, DP.F, DP.p, DP.δ, DP.V)
         values[t] = V; actions[:,t] .= u
-        randos[:,t] .= X.nodes[:,1]
+        randos[:,t] .= X.nodes[:,sample(1:length(X.weights),Weights(X.weights))]
         rewards[t] = DP.R(states[:,t],actions[:,t],randos[:,t],DP.p)
         states[:,t+1] .= DP.F(states[:,t],actions[:,t],randos[:,t],DP.p)
     end
