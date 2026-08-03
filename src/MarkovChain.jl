@@ -20,8 +20,18 @@ given a draw from a uniform random variable rng on the set (0,1).
     - an integer in 1:length(p)
 """
 function sample_discrete(p,rng)
-    minimum(collect(1:length(p))[cumsum(p) .>= rng])
-end 
+    cumulative = zero(eltype(p))
+    @inbounds for i in eachindex(p)
+        cumulative += p[i]
+        if cumulative >= rng
+            return i
+        end
+    end
+    # rng can exceed sum(p) by a few units in the last place when the
+    # probabilities are the product of floating point arithmetic. The last
+    # index is the correct answer in that case.
+    return lastindex(p)
+end
 
 """
     sample_markov_chain(x,p,rng)
@@ -54,18 +64,52 @@ If the nodes are sampled using the weights stored in the random varible object a
 `sample_markov_chain` the results wil be the same as if a uniform random number was sampled. 
 
 This allows the weights and nodes to be used to calcualte expectations over the outcome of the markov chain.
-with the minimum number of computations possible without changing the weights as a function of the current state. 
+with the minimum number of computations possible without changing the weights as a function of the current state.
+
+The columns of p are normalized to sum to one before the nodes are built, so columns that are off
+by a small amount of rounding are handled exactly. A column that is off by more than `tol` is
+treated as an error rather than as rounding, as are negative or non finite entries.
+
+Note that the nodes are points inside the intervals that `sample_discrete` maps to each state,
+they are not the cumulative probabilities themselves.
 ...
 # Arguments:
     - p: a transition probability matrix of size m
+    - tol: how far a column of p may sum from one before it is treated as an error
 
 # Values:
-    - a RandomVariable object 
+    - a RandomVariable object
 """
-function MarkovChain(p)
-    pcopy = deepcopy(p)
-    probs = unique(sort!(reshape(cumsum(pcopy,dims = 1),prod(size(pcopy)))))
-    nodes = reshape(probs,1,length(probs))
-    weights = vcat(nodes[1:1],nodes[2:end] .- nodes[1:(end-1)])
-    return RandomVariable(nodes, weights)
-end 
+function MarkovChain(p; tol = 1e-6)
+    if any(x -> !isfinite(x) || x < 0, p)
+        throw(ArgumentError("the transition matrix contains negative or non finite entries"))
+    end
+
+    totals = [sum(p[:,j]) for j in axes(p,2)]
+    bad = findall(t -> abs(t - 1) > tol, totals)
+    if !isempty(bad)
+        throw(ArgumentError("columns $(bad) of the transition matrix sum to $(totals[bad]), "*
+                            "which differs from one by more than tol = $(tol)"))
+    end
+
+    # normalizing means the nodes describe the transition matrix the user intended, p./sum(p),
+    # rather than p itself. This is only safe because the nodes are placed in the interior of
+    # their intervals below, sample_markov_chain is called with the original p and so compares
+    # the nodes against breakpoints that differ from these by the rounding in each column.
+    cumulatives = [cumsum(p[:,j]) ./ totals[j] for j in axes(p,2)]
+
+    # states with no probability leave an empty interval behind, unique drops the ones in the
+    # middle of a column and the filter drops the ones at the start of a column
+    breakpoints = sort!(unique(reduce(vcat, cumulatives)))
+    filter!(x -> x > 0, breakpoints)
+    weights = vcat(breakpoints[1:1], breakpoints[2:end] .- breakpoints[1:(end-1)])
+
+    # a node may be any point in the interval it represents, sample_discrete returns the same
+    # index for all of them. The midpoint is used rather than the endpoint so each node keeps a
+    # wide margin against rounding in the transition matrix, instead of sitting exactly on a
+    # boundary where one unit in the last place would move a whole state's probability mass.
+    lower = vcat(0.0, breakpoints[1:(end-1)])
+    nodes = reshape((lower .+ breakpoints) ./ 2, 1, length(breakpoints))
+
+    return RandomVariable(nodes, weights ./ sum(weights))
+end
